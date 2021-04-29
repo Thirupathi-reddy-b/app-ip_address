@@ -17,8 +17,9 @@ function getFirstIpAddress(cidrStr, callback) {
 
   // Initialize return arguments for callback
   let firstIpAddress = null;
+  let firstIpv6Address = null;
   let callbackError = null;
-
+  
   // Instantiate an object from the imported class and assign the instance to variable cidr.
   const cidr = new IPCIDR(cidrStr);
   // Initialize options for the toArray() method.
@@ -28,7 +29,11 @@ function getFirstIpAddress(cidrStr, callback) {
     from: 1,
     limit: 1
   };
-
+ 
+ let ipAdress = {
+     ipv4: null,
+      ipv6: null
+  }
   // Use the object's isValid() method to verify the passed CIDR.
   if (!cidr.isValid()) {
     // If the passed CIDR is invalid, set an error message.
@@ -36,14 +41,19 @@ function getFirstIpAddress(cidrStr, callback) {
   } else {
     // If the passed CIDR is valid, call the object's toArray() method.
     // Notice the destructering assignment syntax to get the value of the first array's element.
-    [firstIpAddress] = cidr.toArray(options);
-    ipv6Address = getIpv4MappedIpv6Address(firstIpAddress);
+    [firstIpAddress] = cidr.toArray(options); 
+    firstIpv6Address = getIpv4MappedIpv6Address(firstIpAddress) ;
+    ipAdress = {
+        ipv4 : firstIpAddress,
+        ipv6 : firstIpv6Address
+    }
+    
   }
   // Call the passed callback function.
   // Node.js convention is to pass error data as the first argument to a callback.
   // The IAP convention is to pass returned data as the first argument and error
   // data as the second argument to the callback function.
-  return callback({ipv4: firstIpAddress, ipv6: ipv6Address},  callbackError);
+  return callback(ipAdress, callbackError);
 }
 
 /**
@@ -123,7 +133,7 @@ function main() {
       if (error) {
         console.error(`  Error returned from GET request: ${error}`);
       }
-      console.log(`  Response returned from GET request: ${data}`);
+      console.log(`  Response returned from GET request: {"ipv4:" "${data.ipv4}", "ipv6:" "${data.ipv6}"}`);
     });
   }
   // Iterate over sampleIpv4s and pass the element's value to getIpv4MappedIpv6Address().
